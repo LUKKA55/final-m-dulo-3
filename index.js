@@ -19,6 +19,9 @@ let id_recado = document.querySelector('#id_recado')
 let salvar_recado = document.querySelector('#salvar_recado')
 let tabela_recados = document.querySelector('#tabela_recados')
 
+let alerta_login = document.querySelector('.alerta_login')
+let alerta_cadastro = document.querySelector('.alerta_cadastro')
+
 let banco_de_dados = []
 let banco_de_dados_recados = []
 
@@ -56,8 +59,15 @@ function fazer_conta(){
     let validacao = true
     //vai ver se existe
     if(nome_criar.value.length <= 5 || senha_criar.value.length <=7 || senha_criar.value !== repete_senha.value){
-        alert('preencha corretamente')
         validacao = false
+        alerta_cadastro.innerHTML=`
+                <div class="col-10 ">
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <p>Preencha corretamente os dados</p>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                </div>
+                `        
     }
     if(localStorage.contas){
         //vai verificar se tem alguma coisa dentro do .contas
@@ -65,7 +75,14 @@ function fazer_conta(){
         for(conta of banco_de_dados){
             if(conta.nome === nome_criar.value){
                 validacao = false 
-                alert('Esse usuário já existe, escolha outro')
+                alerta_cadastro.innerHTML=`
+                <div class="col-10 ">
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <p>Nome de usuario já existente</p>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                </div>
+                `                
                 break
             }
         }   
@@ -77,9 +94,17 @@ function fazer_conta(){
             })
             localStorage.setItem('contas', JSON.stringify(banco_de_dados))
             console.log(localStorage.contas);
-            window.open("index.html", "_self");
+            alerta_cadastro.innerHTML=`
+            <div class="col-10 ">
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <p>cadastro feito com sucesso!!!</p>
+                </div>
+            </div>
+            `
+            setTimeout(() => {  window.open("index.html", "_self") }, 2000)
         }
 }
+
 
 if(nome_entrar)nome_entrar.addEventListener('keyup', ()=>{
     if(nome_entrar.value.length <= 5){
@@ -102,15 +127,43 @@ if(senha_entrar)senha_entrar.addEventListener('keyup', ()=>{
 //ENTRAR NA CONTA
 if(botao_entrar) botao_entrar.addEventListener('click', entrar)
 function entrar(){
-    banco_de_dados = JSON.parse(localStorage.contas)
-    let verifica_conta = banco_de_dados.some((el)=>el.nome === nome_entrar.value && el.senha === senha_entrar.value)
+    let dados = JSON.parse(localStorage.getItem('contas'))
+    if (dados === null){
+        alerta_login.innerHTML=`
+        <div class="col-10 ">
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <p>Preencha os dados corretamente</p>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        </div>
+        `
+        return
+    }
+    let verifica_conta = dados.some((el)=>el.nome === nome_entrar.value && el.senha === senha_entrar.value)
     if(verifica_conta){
-        window.open("recado.html", "_self")
+        alerta_login.innerHTML=`
+        <div class="col-10 ">
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <p>Login feito com sucesso!!!</p>
+            </div>
+        </div>
+        `
+        setTimeout(() => {  window.open("recado.html", "_self") }, 2000)
+        let token = Math.random().toString(16).substring(2) + Math.random().toString(16).substring(2)
+        localStorage.setItem('token', token)
     }else{
-        alert('nome ou senha incorreto')
+        alerta_login.innerHTML=`
+        <div class="col-10 ">
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <p>Nome ou Senha incorretos</p>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        </div>
+        `
     }
     }
 //RECADOS
+
 if(salvar_recado) salvar_recado.addEventListener("click", novo_recado)
 
 function novo_recado(){
@@ -158,8 +211,10 @@ function atualiza_recados(){
             <td><strong>#</strong></td>
             <td> ${element.descrição} </td>
             <td> ${element.detalhamento} </td>
-            <td> <button onClick="edita_recado(${element.id})" class="button_recado_editar">Editar<button>
-            <button onClick="deleta_recado(${element.id})" class="button_recado_deletar">Deletar<button></td>
+            <td> 
+            <button onClick="edita_recado(${element.id})" class="button_recado_editar">Editar</button>
+            <button onClick="deleta_recado(${element.id})" class="button_recado_deletar">Deletar</button>
+            </td>
 
         </tr>
         `
@@ -191,4 +246,9 @@ function deleta_recado(id){
     localStorage.setItem('recados', JSON.stringify(recado_delete))
 
     atualiza_recados()
+}
+
+function sair(){
+    localStorage.removeItem('token')
+    window.open("index.html", "_self")
 }
